@@ -1,0 +1,108 @@
+{
+  "name": "gocomet-daw-backend",
+  "version": "2.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "start:newrelic": "cross-env NEW_RELIC_APP_NAME=Anuj2 NEW_RELIC_LICENSE_KEY=7224a8ee0d182f2dcc1cee0eadfa43aeFFFFNRAL node -r newrelic server.js",
+    "start:newrelic:esm": "cross-env NEW_RELIC_APP_NAME=Anuj2 NEW_RELIC_LICENSE_KEY=7224a8ee0d182f2dcc1cee0eadfa43aeFFFFNRAL node --experimental-loader=newrelic/esm-loader.mjs server.js",
+    "dev": "nodemon server.js",
+    "dev:newrelic": "cross-env NEW_RELIC_APP_NAME=Anuj2 NEW_RELIC_LICENSE_KEY=7224a8ee0d182f2dcc1cee0eadfa43aeFFFFNRAL nodemon --exec 'node -r newrelic server.js'",
+    "dev:newrelic:esm": "cross-env NEW_RELIC_APP_NAME=Anuj2 NEW_RELIC_LICENSE_KEY=7224a8ee0d182f2dcc1cee0eadfa43aeFFFFNRAL nodemon --exec 'node --experimental-loader=newrelic/esm-loader.mjs server.js'",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "node prisma/seed.js"
+  },
+  "keywords": [
+    "ride-hailing",
+    "uber",
+    "ola",
+    "gocomet"
+  ],
+  "author": "",
+  "license": "ISC",
+  "description": "GoComet DAW - Multi-tenant ride-hailing system backend",
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.7",
+    "prisma": "^5.22.0",
+    "supertest": "^7.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.19.1",
+    "axios": "^1.7.7",
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.2.0",
+    "helmet": "^7.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.3",
+    "newrelic": "^11.23.2",
+    "pg": "^8.11.3",
+    "redis": "^4.6.13",
+    "socket.io": "^4.8.1",
+    "uuid": "^9.0.1"
+  }
+}
+{
+  "name": "gocomet-daw-backend",
+  "version": "2.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "start:newrelic": "cross-env NEW_RELIC_APP_NAME=Anuj2 NEW_RELIC_LICENSE_KEY=7224a8ee0d182f2dcc1cee0eadfa43aeFFFFNRAL node -r newrelic server.js",
+    "start:newrelic:esm": "cross-env NEW_RELIC_APP_NAME=Anuj2 NEW_RELIC_LICENSE_KEY=7224a8ee0d182f2dcc1cee0eadfa43aeFFFFNRAL node --experimental-loader=newrelic/esm-loader.mjs server.js",
+    "dev": "nodemon server.js",
+    "dev:newrelic": "cross-env NEW_RELIC_APP_NAME=Anuj2 NEW_RELIC_LICENSE_KEY=7224a8ee0d182f2dcc1cee0eadfa43aeFFFFNRAL nodemon --exec 'node -r newrelic server.js'",
+    "dev:newrelic:esm": "cross-env NEW_RELIC_APP_NAME=Anuj2 NEW_RELIC_LICENSE_KEY=7224a8ee0d182f2dcc1cee0eadfa43aeFFFFNRAL nodemon --exec 'node --experimental-loader=newrelic/esm-loader.mjs server.js'",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "node prisma/seed.js"
+  },
+  "keywords": [
+    "ride-hailing",
+    "uber",
+    "ola",
+    "gocomet"
+  ],
+  "author": "",
+  "license": "ISC",
+  "description": "GoComet DAW - Multi-tenant ride-hailing system backend",
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.7",
+    "prisma": "^5.19.1",
+    "supertest": "^7.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.19.1",
+    "axios": "^1.7.7",
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.2.0",
+    "helmet": "^7.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.3",
+    "newrelic": "^11.23.2",
+    "pg": "^8.11.3",
+    "redis": "^4.6.13",
+    "socket.io": "^4.8.1",
+    "uuid": "^9.0.1"
+  }
+}

@@ -1,0 +1,204 @@
+// Prisma schema for GoComet DAW - Multi-tenant ride-hailing system
+// PostgreSQL database with optimized indexes for performance
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model - represents riders
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  firstName String   @map("first_name")
+  lastName  String?  @map("last_name")
+  password  String
+  socketId  String?  @map("socket_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  rides Ride[]
+
+  @@index([email])
+  @@map("users")
+}
+
+// Driver model - represents drivers/captains
+model Driver {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  firstName String   @map("first_name")
+  lastName  String?  @map("last_name")
+  password  String
+  socketId  String?  @map("socket_id")
+  status    DriverStatus @default(INACTIVE)
+  latitude  Float?
+  longitude Float?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  vehicle Vehicle?
+  rides   Ride[]
+  trips   Trip[]
+
+  @@index([status])
+  @@index([latitude, longitude]) // For geospatial queries
+  @@index([email])
+  @@map("drivers")
+}
+
+enum DriverStatus {
+  ACTIVE
+  INACTIVE
+  ON_TRIP
+}
+
+// Vehicle model - driver's vehicle information
+model Vehicle {
+  id         String   @id @default(cuid())
+  driverId   String   @unique @map("driver_id")
+  color      String
+  plate      String   @unique
+  capacity   Int
+  vehicleType VehicleType @map("vehicle_type")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleType])
+  @@map("vehicles")
+}
+
+enum VehicleType {
+  CAR
+  MOTORCYCLE
+  AUTO
+}
+
+// Ride model - ride requests
+model Ride {
+  id            String      @id @default(cuid())
+  userId        String       @map("user_id")
+  driverId      String?      @map("driver_id")
+  pickupAddress String       @map("pickup_address")
+  pickupLat     Float        @map("pickup_lat")
+  pickupLng     Float        @map("pickup_lng")
+  destAddress   String       @map("dest_address")
+  destLat       Float        @map("dest_lat")
+  destLng       Float        @map("dest_lng")
+  vehicleType   VehicleType  @map("vehicle_type")
+  tier          String?      @default("standard") // ride tier: standard, premium, etc.
+  paymentMethod String?      @map("payment_method") // payment method preference
+  estimatedFare Float?      @map("estimated_fare")
+  status        RideStatus  @default(PENDING)
+  otp           String?     // OTP for ride verification
+  idempotencyKey String?    @unique @map("idempotency_key")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  user   User    @relation(fields: [userId], references: [id])
+  driver Driver? @relation(fields: [driverId], references: [id])
+  trip   Trip?
+
+  @@index([userId])
+  @@index([driverId])
+  @@index([status])
+  @@index([idempotencyKey])
+  @@index([createdAt])
+  @@map("rides")
+}
+
+enum RideStatus {
+  PENDING
+  ACCEPTED
+  ONGOING
+  COMPLETED
+  CANCELLED
+  TIMEOUT
+}
+
+// Trip model - active trips with location tracking
+model Trip {
+  id            String   @id @default(cuid())
+  rideId        String   @unique @map("ride_id")
+  driverId      String   @map("driver_id")
+  startTime     DateTime? @map("start_time")
+  endTime       DateTime? @map("end_time")
+  pausedAt      DateTime? @map("paused_at")
+  totalDistance Float?   @default(0) @map("total_distance") // in meters
+  totalDuration Int?     @default(0) @map("total_duration") // in seconds
+  finalFare     Float?   @map("final_fare")
+  baseFare      Float?   @map("base_fare")
+  distanceFare  Float?   @map("distance_fare")
+  timeFare      Float?   @map("time_fare")
+  surgeMultiplier Float? @default(1.0) @map("surge_multiplier")
+  status        TripStatus @default(ACTIVE)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  ride   Ride   @relation(fields: [rideId], references: [id])
+  driver Driver @relation(fields: [driverId], references: [id])
+  payments Payment[]
+
+  @@index([driverId])
+  @@index([status])
+  @@index([rideId])
+  @@map("trips")
+}
+
+enum TripStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+// Payment model - payment transactions
+model Payment {
+  id            String        @id @default(cuid())
+  tripId        String        @map("trip_id")
+  amount        Float
+  currency      String        @default("USD")
+  paymentMethod String        @map("payment_method")
+  status        PaymentStatus @default(PENDING)
+  pspReference  String?       @map("psp_reference") // External PSP reference
+  pspResponse   Json?         @map("psp_response") // Full PSP response
+  receiptUrl    String?       @map("receipt_url")
+  idempotencyKey String?      @unique @map("idempotency_key")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  trip Trip @relation(fields: [tripId], references: [id])
+
+  @@index([tripId])
+  @@index([status])
+  @@index([idempotencyKey])
+  @@map("payments")
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// DriverLocationHistory - for tracking location updates (optional, can use Redis)
+model DriverLocationHistory {
+  id        String   @id @default(cuid())
+  driverId  String   @map("driver_id")
+  latitude  Float
+  longitude Float
+  timestamp DateTime @default(now())
+
+  @@index([driverId, timestamp])
+  @@index([timestamp])
+  @@map("driver_location_history")
+}
+

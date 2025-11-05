@@ -1,0 +1,108 @@
+# Docker Compose for GoComet DAW - Multi-tenant ride-hailing system
+# This file includes PostgreSQL, Redis, and optionally MongoDB for legacy support
+# Use this to run all database services in Docker without installing them locally
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: gocomet-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gocomet}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gocomet123}
+      POSTGRES_DB: ${POSTGRES_DB:-gocomet_daw}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gocomet}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - gocomet-network
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: gocomet-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - gocomet-network
+    restart: unless-stopped
+
+  # MongoDB (Legacy support - optional, comment out if not needed)
+  mongodb:
+    image: mongo:7
+    container_name: gocomet-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-uber-video}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - gocomet-network
+    restart: unless-stopped
+
+  # Optional: pgAdmin for PostgreSQL management (uncomment if needed)
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   container_name: gocomet-pgadmin
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@gocomet.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin123
+  #   ports:
+  #     - "5050:80"
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - gocomet-network
+
+  # Optional: Redis Commander for Redis management (uncomment if needed)
+  # redis-commander:
+  #   image: rediscommander/redis-commander:latest
+  #   container_name: gocomet-redis-commander
+  #   environment:
+  #     REDIS_HOSTS: local:redis:6379
+  #   ports:
+  #     - "8081:8081"
+  #   depends_on:
+  #     - redis
+  #   networks:
+  #     - gocomet-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  mongodb_data:
+    driver: local
+
+networks:
+  gocomet-network:
+    driver: bridge
+

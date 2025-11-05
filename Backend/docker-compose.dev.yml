@@ -1,0 +1,84 @@
+# Docker Compose for Development - Only Infrastructure Services
+# This file runs PostgreSQL, Redis, and MongoDB in Docker
+# Run your backend locally with: npm run dev
+# 
+# Usage: docker-compose -f docker-compose.dev.yml up -d
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: gocomet-postgres-dev
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gocomet}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gocomet123}
+      POSTGRES_DB: ${POSTGRES_DB:-gocomet_daw}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gocomet}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - gocomet-network
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: gocomet-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - gocomet-network
+    restart: unless-stopped
+
+  # MongoDB (Legacy support - optional)
+  mongodb:
+    image: mongo:7
+    container_name: gocomet-mongodb-dev
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-uber-video}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - gocomet-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  mongodb_data:
+    driver: local
+
+networks:
+  gocomet-network:
+    driver: bridge
+
+
